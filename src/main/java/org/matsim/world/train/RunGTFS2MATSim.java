@@ -50,8 +50,8 @@ public class RunGTFS2MATSim {
 	public static void main(String[] args) {
 		
 		Scenario scenario = createScenario();
-		setLinksSpeeds(scenario);
-//		runScenario(scenario);
+//		setLinkSpeeds(scenario);
+		runScenario(scenario);
 
 		
 	}
@@ -86,19 +86,18 @@ public class RunGTFS2MATSim {
 		config.transitRouter().setMaxBeelineWalkConnectionDistance(1);
 			
 		Controler controler = new Controler(scenario);
-		log.info("Number transitVehicles in scenario: " + scenario.getTransitVehicles().getVehicles().size());
 
 		controler.run();
 
 	}
 	
-	private static void setLinksSpeeds(Scenario scenario) {
-		Map<Id<Link>, Double> linkSpeeds = new HashMap<>();
-		Map<Id<Link>, Double> linkSpeeds2 = new HashMap<>();
+	private static void setLinkSpeeds(Scenario scenario) {
+		Map<Id<Link>, Double> linkSpeedSums = new HashMap<>();
+		Map<Id<Link>, Double> linkSpeedNumbers = new HashMap<>();
 		
 		for (Link link : scenario.getNetwork().getLinks().values()) {
-			linkSpeeds.put(link.getId(), 0.);
-			linkSpeeds2.put(link.getId(), 0.);
+			linkSpeedSums.put(link.getId(), 0.);
+			linkSpeedNumbers.put(link.getId(), 0.);
 		}
 		
 		
@@ -124,13 +123,13 @@ public class RunGTFS2MATSim {
 							linkId = transitRoute.getRoute().getLinkIds().get(ii-1);
 						}
 						
-						Double speedSum = linkSpeeds.get(linkId);
+						Double speedSum = linkSpeedSums.get(linkId);
 						speedSum += scenario.getNetwork().getLinks().get(linkId).getLength() / (arrivalTime - departureTime);
-						linkSpeeds.replace(linkId, speedSum);
+						linkSpeedSums.replace(linkId, speedSum);
 						
-						Double speedNumber = linkSpeeds2.get(linkId);
+						Double speedNumber = linkSpeedNumbers.get(linkId);
 						speedNumber += 1;
-						linkSpeeds2.replace(linkId, speedNumber);
+						linkSpeedNumbers.replace(linkId, speedNumber);
 						
 						
 					}
