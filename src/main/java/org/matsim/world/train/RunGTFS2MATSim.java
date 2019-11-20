@@ -50,7 +50,7 @@ public class RunGTFS2MATSim {
 	public static void main(String[] args) {
 		
 		Scenario scenario = createScenario();
-//		setLinkSpeeds(scenario);
+
 		runScenario(scenario);
 
 		
@@ -59,6 +59,13 @@ public class RunGTFS2MATSim {
 	private static Scenario createScenario() {
 		Scenario scenario = new CreatePtScheduleAndVehiclesFromGtfs().run(inputGTFSFile);
 		
+//		sets link speeds to an average speed of all train trips that travel on this link
+//		setLinkSpeedsToAverage(scenario);
+		
+//		sets link speeds to the maximum speed of all train trips that travel on this link
+//		this should insure, that no trips are late, some may, however, be early
+		setLinkSpeedsToMax(scenario);
+
 		log.info("writing transit schedule and vehicles");
 
 		new VehicleWriterV1(scenario.getVehicles()).writeFile(outputDir+"GTFSTransitVehiclesDB.xml.gz");
@@ -91,7 +98,7 @@ public class RunGTFS2MATSim {
 
 	}
 	
-	private static void setLinkSpeeds(Scenario scenario) {
+	private static void setLinkSpeedsToAverage(Scenario scenario) {
 		Map<Id<Link>, Double> linkSpeedSums = new HashMap<>();
 		Map<Id<Link>, Double> linkSpeedNumbers = new HashMap<>();
 		
@@ -109,12 +116,16 @@ public class RunGTFS2MATSim {
 				for (int ii = 0; ii < transitRoute.getStops().size(); ii++) {
 					
 					arrivalTime = transitRoute.getStops().get(ii).getArrivalOffset();
+					Id<Link> linkId = null;
 					if (ii == 0) {
+						linkId = transitRoute.getRoute().getStartLinkId();
+						linkSpeedSums.replace(linkId, 50.);
+						linkSpeedNumbers.replace(linkId, 1.);
 
 					}
 					
 					else {
-						Id<Link> linkId = null;
+						
 						if (ii == transitRoute.getStops().size()-1) {
 							linkId = transitRoute.getRoute().getEndLinkId();
 						}
@@ -142,10 +153,79 @@ public class RunGTFS2MATSim {
 			
 		}
 		
-//		for (Link link : scenario.getNetwork().getLinks().values()) {
-//			double speed = linkSpeeds.get(link.getId()) / linkSpeeds2.get(link.getId());
-//			System.out.println(speed+"	;"+speed*3.6+"	;"+linkSpeeds2.get(link.getId())+"	;"+linkSpeeds.get(link.getId())+"	;"+link.getId().toString()+"	;"+link.getLength());
-//		}
+		for (Link link : scenario.getNetwork().getLinks().values()) {
+			double speed = linkSpeedSums.get(link.getId()) / linkSpeedNumbers.get(link.getId());
+			link.setFreespeed(speed);
+			if (speed>200./3.6) {
+				log.warn("Link speed is higher than 200 km/h on link " + link.getId()+ " - Speed is " + Math.round(speed*3.6) + " km/h");
+			}
+			if (speed<30./3.6) {
+				log.warn("Link speed is lower than 30 km/h on link " + link.getId()+ " - Speed is " + Math.round(speed*3.6) + " km/h");
+			}
+		}
+		
+	}
+	
+	private static void setLinkSpeedsToMax(Scenario scenario) {
+		Map<Id<Link>, Double> linkMaxSpeed = new HashMap<>();
+		
+		
+		for (Link link : scenario.getNetwork().getLinks().values()) {
+			linkMaxSpeed.put(link.getId(), 0.);
+		}
+		
+		
+		
+		for (TransitLine line : scenario.getTransitSchedule().getTransitLines().values()) {
+			for (TransitRoute transitRoute : line.getRoutes().values()) {
+				double arrivalTime = 0;
+				double departureTime = 0;
+				for (int ii = 0; ii < transitRoute.getStops().size(); ii++) {
+					
+					arrivalTime = transitRoute.getStops().get(ii).getArrivalOffset();
+					Id<Link> linkId = null;
+					if (ii == 0) {
+						linkId = transitRoute.getRoute().getStartLinkId();
+						linkMaxSpeed.replace(linkId, 50.);
+					}
+					
+					else {
+						
+						if (ii == transitRoute.getStops().size()-1) {
+							linkId = transitRoute.getRoute().getEndLinkId();
+						}
+						
+						else {
+							linkId = transitRoute.getRoute().getLinkIds().get(ii-1);
+						}
+						
+						Double prevSpeed = linkMaxSpeed.get(linkId);
+						double newSpeed = scenario.getNetwork().getLinks().get(linkId).getLength() / (arrivalTime - departureTime);
+						
+						if(newSpeed > prevSpeed) {
+							linkMaxSpeed.replace(linkId, newSpeed);
+						}
+						
+					}
+					
+					departureTime = transitRoute.getStops().get(ii).getDepartureOffset();
+				}
+				
+				
+			}
+			
+		}
+		
+		for (Link link : scenario.getNetwork().getLinks().values()) {
+			double speed = linkMaxSpeed.get(link.getId());
+			link.setFreespeed(speed);
+			if (speed>200./3.6) {
+				log.warn("Link speed is higher than 200 km/h on link " + link.getId()+ " - Speed is " + Math.round(speed*3.6) + " km/h");
+			}
+			if (speed<30./3.6) {
+				log.warn("Link speed is lower than 30 km/h on link " + link.getId()+ " - Speed is " + Math.round(speed*3.6) + " km/h");
+			}
+		}
 		
 	}
 
