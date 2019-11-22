@@ -34,7 +34,11 @@
 			<!-- For MATSim snapshots: -->
 			<id>ojo-snapshots</id>
 			<url>http://oss.jfrog.org/libs-snapshot</url>
-		</repository>	
+		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
@@ -107,10 +111,15 @@
 			<version>${matsim.version}</version>
 		</dependency>
 		<dependency>
-            <groupId>org.matsim.contrib</groupId>
-            <artifactId>matsim-gtfs</artifactId>
-            <version>11.1-SNAPSHOT</version>
-        </dependency>
+			<groupId>com.github.matsim-org</groupId>
+			<artifactId>GTFS2MATSim</artifactId>
+			<version>11.2</version>
+		</dependency>
+<!--		<dependency>-->
+<!--            <groupId>org.matsim.contrib</groupId>-->
+<!--            <artifactId>matsim-gtfs</artifactId>-->
+<!--            <version>11.1-SNAPSHOT</version>-->
+<!--        </dependency>-->
 		<!--Dependencies from where stated above to here are added as a service; they can be removed if you don't need them-->
 
 	</dependencies>
