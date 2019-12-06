@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.matsim.run.CreateAndRunDummyScenario;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -40,7 +41,7 @@ public class RunMatsimTest{
 				  "--config:controler.lastIteration=1",
 				  "--config:controler.writeEventsInterval=1"
 			} ;
-			RunMatsim.main( args ) ;
+			CreateAndRunDummyScenario.main( args ) ;
 		} catch ( Exception ee ) {
 			Logger.getLogger(this.getClass()).fatal("there was an exception: \n" + ee ) ;
 
